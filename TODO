@@ -1,0 +1,7 @@
+Add support for playing sounds on chat messages, low energy, etc.
+Allow auto-rolling stats at character creation.
+Detect the server version. When viewing stats, 5.01 sends slightly different data than 4.03, and deciding which version to support currently needs to be done at compile time.
+In general, the client could be made to work better on a 25x80 screen. Sending more than a line length of text in chat likely does not work. We could add the ability to use pgup/pgdn to scroll the chat window. Maybe the stat window could be optimized better, or some items could be removed depending on the size of the screen (there's always the in-game command to display complete stats).
+The cursor isn't always positioned correctly when the chat response window is supposed to have focus. Some functions don't call fix_cursor() and should.
+Need to indicate when movement is allowed.
+It is possible (notably on the initial screen) to have more text than will fit into the message window, so the first message will scroll off before the user can see it.
