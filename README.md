@@ -20,3 +20,5 @@ For the main menu (when not fighting a monster, inside a trading post, etc), it 
 * b: move southwest.
 * j: move south.
 * n: move southeast.
+
+Pressing tab will switch the focus between the main window and the chat window.
