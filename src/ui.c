@@ -57,6 +57,8 @@ struct UI
   int special_text_size;
   int special_text_len;
   int special_text_pos;
+  pbool is_class_dlg;
+  int class;
 };
 
 static STAT stats[MAX_PACKET_COUNT];
@@ -186,6 +188,27 @@ is_more_prompt (STATE *state)
   return TRUE;
 }
 
+static pbool
+is_class_dlg (STATE *state)
+{
+  return (state->buttons[0] && !strcmp (state->buttons[0], "Mage"));
+}
+
+static pbool
+do_reroll (STATE *state)
+{
+  if (!state->buttons[0] || strcmp (state->buttons[0], "Reroll") != 0)
+    return FALSE;
+
+  switch (state->ui->class)
+  {
+  case 2: /* fighter */
+    return state->player.speed[0] < 37 || state->player.strength[0] < 42;
+  default:
+    return FALSE;
+  }
+}
+
 void
 ui_present_dialog (STATE *state)
 {
@@ -198,11 +221,21 @@ ui_present_dialog (STATE *state)
     return;
 
   werase (state->ui->dlgwin);
+
+  state->ui->is_class_dlg = is_class_dlg (state);
+
   if (is_more_prompt (state))
   {
     sprintf (buf, "--%s--", state->buttons[0]);
     waddstr (state->ui->dlgwin, buf);
     wrefresh (state->ui->dlgwin);
+    return;
+  }
+
+  if (do_reroll (state))
+  {
+    respond (state, "0");
+    state->dialog_mode = 0;
     return;
   }
 
@@ -392,7 +425,11 @@ handle_key_for_dialog (STATE *state, int ch)
   /* fall through to next case */
   case BUTTONS_PACKET:
     if (ch >= '1' && ch <= '8' && state->buttons[ch - '1'])
+    {
       end_dialog (state, "%c", ch - 1);
+      if (state->ui->is_class_dlg)
+        state->ui->class = ch - '0';
+    }
     if (ch == ' ' && is_more_prompt (state))
       end_dialog (state, "0");
     break;
