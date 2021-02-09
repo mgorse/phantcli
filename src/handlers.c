@@ -22,19 +22,48 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <bsd/md5.h>
 
 static ServerDataHandler handlers[MAX_PACKET_COUNT];
+
+static void
+get_hash (int cookie, char *out)
+{
+  char buf[128];
+	MD5_CTX context;
+  unsigned char digest[16];
+  int i;
+
+  if (!cookie)
+  {
+    strcpy (out, "0");
+    return;
+  }
+
+  sprintf (buf, "Impressive%d", cookie);
+
+  MD5Init(&context);
+  MD5Update(&context, (unsigned char *)buf, strlen (buf));
+		MD5Final(digest, &context);
+
+  for (i = 0; i < 16; i++)
+    sprintf (out + i * 2, "%2x", digest[i]);
+  digest[32] = '\0';
+}
 
 static pbool
 handle_handshake (STATE *state, const char *buf)
 {
+  char hash[33];
+
   respond (state, "1004");
 #if 0
   respond (state, "BETA");
   respond (state, "010");
 #endif
-  respond (state, "0"); /* No cookie support, hope that's okay */
-  respond (state, "0"); /* ditto */
+  respond (state, "%d", state->cookie);
+  get_hash (state->cookie, hash);
+  respond (state, "%s", hash);
   respond (state, "%d", time (NULL));
   return FALSE;
 }

@@ -26,6 +26,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <time.h>
 
 int sockconnect (const char *host, int port)
 {
@@ -115,6 +117,62 @@ read_socket (STATE *state)
   return 0;
 }
 
+static void
+mkdirs (char *buf)
+{
+  int i;
+  char *p;
+
+  p = strstr (buf, ".local");
+
+  for (i = 0; i < 3; i++)
+  {
+    p = strchr (p, '/');
+    if (*p != '/')
+      return;
+    *p = '\0';
+    mkdir (buf, 493);	/* FIXME: octal 0755 */
+    *p = '/';
+    p++;
+  }
+}
+
+static int
+get_cookie ()
+{
+  char buf[1024];
+  int cookie = 0;
+  FILE *fp;
+  const char *home = getenv ("HOME");
+
+  if (!home)
+    return 0;
+
+  snprintf (buf, sizeof (buf), "%s/.local/share/phantcli/cookie", home);
+  buf[sizeof(buf) - 1] = '\0';
+  mkdirs (buf);
+
+  fp = fopen (buf, "r");
+  if (fp)
+  {
+    fscanf (fp, "%d", &cookie);
+    fclose (fp);
+  }
+
+  if (!cookie)
+  {
+    cookie = rand ();
+    fp = fopen (buf, "w");
+    if (fp)
+    {
+      fprintf (fp, "%d\n", cookie);
+      fclose (fp);
+    }
+  }
+
+  return cookie;
+}
+
 void
 do_client (const char *host, int port)
 {
@@ -132,6 +190,8 @@ do_client (const char *host, int port)
     fprintf(stderr, "Could not connect to %s port %d\n", host, port);
     return;
   }
+
+  state.cookie = get_cookie ();
 
   ui_init (&state);
 
@@ -227,6 +287,8 @@ main(int argc, char *argv[])
       break;
     }
   }
+
+  srand (time (NULL));
 
   do_client (host, port);
 }

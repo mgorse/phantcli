@@ -5,7 +5,7 @@ objs = main.o \
 	ui.o
 
 phantcli: $(objs)
-	gcc $(CFLAGS) -o $@ $^ -lncurses
+	gcc $(CFLAGS) -o $@ $^ -lncurses -lbsd
 
 $(objs): %.o: %.c
 	gcc $(CFLAGS) -c -o $@ $<

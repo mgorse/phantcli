@@ -49,6 +49,7 @@ struct player
 struct state
 {
   int fd;
+  int cookie;
   char buf[1024]; /* for socket data */
   int bufpos;
   ServerDataHandler sdh;
