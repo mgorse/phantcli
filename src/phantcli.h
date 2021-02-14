@@ -71,7 +71,7 @@ struct state
     int shield;
     int sword;
     int quicksilver;
-    int mana;
+    int mana[2];
     int level;
     int gold;
     int gems;
@@ -81,6 +81,9 @@ struct state
     pbool palantir;
     pbool ring;
     pbool virgin;
+    int amulets;
+    int charms;
+    int tokens;
     pbool staff;
   } player;
   PLAYER *players;

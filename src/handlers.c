@@ -56,11 +56,11 @@ handle_handshake (STATE *state, const char *buf)
 {
   char hash[33];
 
-  respond (state, "1004");
-#if 0
+#ifdef PHANT5
   respond (state, "BETA");
   respond (state, "010");
 #endif
+  respond (state, "1004");
   respond (state, "%d", state->cookie);
   get_hash (state->cookie, hash);
   respond (state, "%s", hash);
@@ -77,10 +77,7 @@ handle_close (STATE *state, const char *buf)
 static pbool
 handle_ping (STATE *state, const char *buf)
 {
-  char out[10];
-
-  sprintf (out, "3");
-  send_string (state, out);
+  send_string_f (state, "%d", C_PING_PACKET);
   ui_timeout (state);
   return FALSE;
 }
@@ -373,39 +370,37 @@ handle_location (STATE *state, const char *buf)
 }
 
 static pbool
-handle_energy (STATE *state, const char *buf)
+handle_int_array (STATE *state, const char *buf, int *out, int count)
 {
   if (!buf)
     return TRUE;
-  state->player.energy[state->line_count++] = atoi (buf);
-  if (state->line_count < 3)
-    return TRUE;
-  ui_update_stat (state, state->cur_packet);
-  return FALSE;
+
+  out[state->line_count++] = atoi (buf);
+  if (state->line_count >= count)
+  {
+    ui_update_stat (state, state->cur_packet);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static pbool
+handle_energy (STATE *state, const char *buf)
+{
+  return handle_int_array (state, buf, state->player.energy, 3);
 }
 
 static pbool
 handle_strength (STATE *state, const char *buf)
 {
-  if (!buf)
-    return TRUE;
-  state->player.strength[state->line_count++] = atoi (buf);
-  if (state->line_count < 2)
-    return TRUE;
-  ui_update_stat (state, state->cur_packet);
-  return FALSE;
+  return handle_int_array (state, buf, state->player.strength, 2);
 }
 
 static pbool
 handle_speed (STATE *state, const char *buf)
 {
-  if (!buf)
-    return TRUE;
-  state->player.speed[state->line_count++] = atoi (buf);
-  if (state->line_count < 2)
-    return TRUE;
-  ui_update_stat (state, state->cur_packet);
-  return FALSE;
+  return handle_int_array (state, buf, state->player.speed, 2);
 }
 
 static pbool
@@ -440,7 +435,11 @@ handle_quicksilver (STATE *state, const char *buf)
 static pbool
 handle_mana (STATE *state, const char *buf)
 {
-  return handle_int_val (state, buf, &state->player.mana);
+#ifdef PHANT5
+  return handle_int_array (state, buf, state->player.mana, 2);
+#else
+  return handle_int_array (state, buf, state->player.mana, 1);
+#endif
 }
 
 static pbool
@@ -513,6 +512,31 @@ handle_virgin (STATE *state, const char *buf)
 }
 
 static pbool
+handle_timed_ping (STATE *state, const char *buf)
+{
+  send_string_f (state, "%d", C_PONG_PACKET);
+  return FALSE;
+}
+
+static pbool
+handle_amulets (STATE *state, const char *buf)
+{
+  return handle_int_val (state, buf, &state->player.amulets);
+}
+
+static pbool
+handle_charms (STATE *state, const char *buf)
+{
+  return handle_int_val (state, buf, &state->player.charms);
+}
+
+static pbool
+handle_tokens (STATE *state, const char *buf)
+{
+  return handle_int_val (state, buf, &state->player.tokens);
+}
+
+static pbool
 handle_staff (STATE *state, const char *buf)
 {
   /* TODO: ui.c has no support for this */
@@ -560,6 +584,10 @@ init_handlers ()
   handlers[PALANTIR_PACKET] = handle_palantir;
   handlers[RING_PACKET] = handle_ring;
   handlers[VIRGIN_PACKET] = handle_virgin;
+  handlers[TIMED_PING_PACKET] = handle_timed_ping;
+  handlers[AMULETS_PACKET] = handle_amulets;
+  handlers[CHARMS_PACKET] = handle_charms;
+  handlers[TOKENS_PACKET] = handle_tokens;
   handlers[STAFF_PACKET] = handle_staff;
 }
 

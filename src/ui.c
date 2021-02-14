@@ -647,7 +647,10 @@ ui_update_stat (STATE *state, int packet)
   switch (packet)
   {
   case ENERGY_PACKET:
-    sprintf (buf, "%d %d %d", state->player.energy[0], state->player.energy[1], state->player.energy[2]);
+    if (state->player.energy[2] > 0)
+      sprintf (buf, "%d (%d) %d", state->player.energy[0], state->player.energy[1], state->player.energy[2]);
+    else
+      sprintf (buf, "%d (%d)", state->player.energy[0], state->player.energy[1]);
     break;
   case SHIELD_PACKET:
     sprintf (buf, "%d", state->player.shield);
@@ -665,7 +668,11 @@ ui_update_stat (STATE *state, int packet)
     sprintf (buf, "%d", state->player.quicksilver);
     break;
   case MANA_PACKET:
-    sprintf (buf, "%d", state->player.mana);
+#ifdef PHANT5
+    sprintf (buf, "%d (%d)", state->player.mana[0], state->player.mana[1]);
+#else
+    sprintf (buf, "%d", state->player.mana[0]);
+#endif
     break;
   case LEVEL_PACKET:
     sprintf (buf, "%d", state->player.level);
