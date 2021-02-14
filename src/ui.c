@@ -64,12 +64,24 @@ struct UI
 static STAT stats[MAX_PACKET_COUNT];
 
 static void
-add_stat (int index, const char *label, int row, int label_col, int data_col)
+add_stat (STATE *state, int index, const char *label)
 {
+  static int row = 0, col = 0;
+
+  if (row >= 8)
+    return; /* no room for it */
+
   stats[index].label = label;
   stats[index].row = row;
-  stats[index].label_col = label_col;
-  stats[index].data_col = data_col;
+  stats[index].label_col = col * 40;
+  stats[index].data_col = stats[index].label_col + 15;
+
+  col++;
+  if (col >= state->ui->ncols / 40)
+  {
+    row++;
+    col = 0;
+  }
 }
 
 void
@@ -77,23 +89,6 @@ ui_init (STATE *state)
 {
   struct termios tty;
 
-  add_stat (ENERGY_PACKET, "Energy", 0, 0, 15);
-  add_stat (STRENGTH_PACKET, "Strength", 0, 40, 55);
-  add_stat (SPEED_PACKET, "Speed", 1, 0, 15);
-  add_stat (SHIELD_PACKET, "Shield", 1, 40, 55);
-  add_stat (SWORD_PACKET, "Sword", 2, 0, 15);
-  add_stat (QUICKSILVER_PACKET, "Quicksilver", 2, 40, 55);
-  add_stat (MANA_PACKET, "Mana", 3, 0, 15);
-  add_stat (LEVEL_PACKET, "Level", 3, 40, 55);
-  add_stat (GOLD_PACKET, "Gold", 4, 0, 15);
-  add_stat (GEMS_PACKET, "Gems", 4, 40, 55);
-  add_stat (CLOAK_PACKET, "Cloak", 5, 0, 15);
-  add_stat (BLESSING_PACKET, "Blessing", 5, 40, 55);
-  add_stat (CROWN_PACKET, "Crowns", 6, 0, 15);
-  add_stat (PALANTIR_PACKET, "Palantir", 6, 40, 55);
-  add_stat (RING_PACKET, "Ring", 7, 0, 15);
-  add_stat (VIRGIN_PACKET, "Virgin", 7, 40, 55);
-  
   state->ui = (UI *) calloc (sizeof (UI), 1);
 	initscr();		/* turn on curses */
 	noecho();		/* do not echo input */
@@ -105,6 +100,29 @@ ui_init (STATE *state)
 #endif
   state->ui->nrows = getmaxy (stdscr);
   state->ui->ncols = getmaxx (stdscr);
+
+  add_stat (state, ENERGY_PACKET, "Energy");
+  add_stat (state, STRENGTH_PACKET, "Strength");
+  add_stat (state, SPEED_PACKET, "Speed");
+  add_stat (state, SHIELD_PACKET, "Shield");
+  add_stat (state, SWORD_PACKET, "Sword");
+  add_stat (state, QUICKSILVER_PACKET, "Quicksilver");
+  add_stat (state, MANA_PACKET, "Mana");
+  add_stat (state, LEVEL_PACKET, "Level");
+  add_stat (state, GOLD_PACKET, "Gold");
+  add_stat (state, GEMS_PACKET, "Gems");
+  add_stat (state, CLOAK_PACKET, "Cloak");
+  add_stat (state, BLESSING_PACKET, "Blessing");
+  add_stat (state, CROWN_PACKET, "Crowns");
+  add_stat (state, PALANTIR_PACKET, "Palantir");
+  add_stat (state, RING_PACKET, "Ring");
+  add_stat (state, VIRGIN_PACKET, "Virgin");
+#ifdef PHANT5
+  add_stat (state, AMULETS_PACKET, "Amulets");
+  add_stat (state, CHARMS_PACKET, "Charms");
+  add_stat (state, TOKENS_PACKET, "Tokens");
+#endif
+  
 	clear();
 	refresh();
   state->ui->msgwin = newwin (MSGROWS, state->ui->ncols, 1, 0);
@@ -636,7 +654,7 @@ ui_update_stat (STATE *state, int packet)
   }
 
   if (!stats[packet].label)
-    return; /* unsupported stat */
+    return; /* unsupported stat, or no room for it on screen */
 
   if (!state->ui->statwin)
     draw_stats (state);
@@ -700,6 +718,15 @@ ui_update_stat (STATE *state, int packet)
     break;
   case VIRGIN_PACKET:
     get_bool (state->player.virgin, buf);
+    break;
+  case AMULETS_PACKET:
+    sprintf (buf, "%d", state->player.amulets);
+    break;
+  case CHARMS_PACKET:
+    sprintf (buf, "%d", state->player.charms);
+    break;
+  case TOKENS_PACKET:
+    sprintf (buf, "%d", state->player.tokens);
     break;
   default:
     dlog ("ERROR: %s: unexpected stat %d\n", packet);
