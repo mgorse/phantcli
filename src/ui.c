@@ -191,7 +191,7 @@ is_more_prompt (STATE *state)
 static pbool
 is_class_dlg (STATE *state)
 {
-  return (state->buttons[0] && !strcmp (state->buttons[0], "Mage"));
+  return (state->buttons[0] && !strcmp (state->buttons[0], "Magic-User"));
 }
 
 static pbool
