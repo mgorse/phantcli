@@ -329,6 +329,29 @@ handle_player_info (STATE *state, const char *buf)
 }
 
 static pbool
+handle_examine (STATE *state, const char *buf)
+{
+  if (!buf)
+    return TRUE;
+
+  switch (state->line_count++)
+  {
+  case 0:
+    state->lines_expected = 0;
+    sscanf (buf, "%d", &state->lines_expected);
+    return TRUE;
+  default:
+    ui_post_special_text (state, buf);
+    if (state->line_count >= state->lines_expected + 1)
+    {
+      ui_post_special_text (state, NULL);
+      return FALSE;
+    }
+    return TRUE;
+  }
+}
+
+static pbool
 handle_name (STATE *state, const char *buf)
 {
   if (!buf)
@@ -566,6 +589,7 @@ init_handlers ()
   handlers[ACTIVATE_CHAT_PACKET] = handle_activate_chat;
   handlers[DEACTIVATE_CHAT_PACKET] = handle_deactivate_chat;
   handlers[PLAYER_INFO_PACKET] = handle_player_info;
+  handlers[EXAMINE_PACKET] = handle_examine;
   handlers[NAME_PACKET] = handle_name;
   handlers[LOCATION_PACKET] = handle_location;
   handlers[ENERGY_PACKET] = handle_energy;
