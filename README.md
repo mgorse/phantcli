@@ -21,4 +21,5 @@ For the main menu (when not fighting a monster, inside a trading post, etc), it 
 * j: move south.
 * n: move southeast.
 
-Pressing tab will switch the focus between the main window and the chat window.
+Pressing tab will switch the focus between the main window and the chat window.  
+When a dialog is present, pressing escape will ask the server to cancel the dialog.
