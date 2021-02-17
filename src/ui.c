@@ -592,8 +592,12 @@ ui_clear (STATE *state)
 {
   int i;
 
-  werase (state->ui->msgwin);
-  wrefresh (state->ui->msgwin);
+  if (!state->ui->special_text_pos)
+  {
+    werase (state->ui->msgwin);
+    wrefresh (state->ui->msgwin);
+  }
+
   state->ui->msgpos = 0;
   for (i = 0; i < MSGROWS; i++)
   {
