@@ -265,7 +265,7 @@ respond (STATE *state, const char *fmt, ...)
 int
 main(int argc, char *argv[])
 {
-  const char *host = "phantasia4.net";
+  const char *host = "phantasia.dev";
   int port = 43302;
   int done = 0;
 
